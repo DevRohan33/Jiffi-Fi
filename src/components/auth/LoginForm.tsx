@@ -7,12 +7,13 @@ import { Mail, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 
-
 const LoginForm = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isForgotPassword, setIsForgotPassword] = useState<boolean>(false);
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,14 +29,14 @@ const LoginForm = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
-    });
+      });
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
       toast({ title: "Success", description: "Login successful!" });
       navigate('/dashboard');
     } catch (error: any) {
@@ -49,14 +50,101 @@ const LoginForm = () => {
     }
   };
 
+  const handleForgotPassword = async (): Promise<void> => {
+    if (!email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email sent!",
+        description: "Check your email for a password reset link",
+      });
+      setIsForgotPassword(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email",
+        variant: "destructive",
+      });
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  if (isForgotPassword) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <img
+            src="/Logo1.png" 
+            alt="Jiffi Fi Logo"
+            className="mx-auto h-24 w-24"
+          />
+          <h1 className="text-2xl font-bold">Reset Password</h1>
+          <p className="text-muted-foreground">
+            Enter your email to receive a reset link
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="forgot-email">Email</Label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                <Mail size={18} />
+              </div>
+              <Input
+                id="forgot-email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleForgotPassword}
+            className="w-full"
+            disabled={forgotPasswordLoading}
+          >
+            {forgotPasswordLoading ? 'Sending...' : 'Send Reset Link'}
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setIsForgotPassword(false)}
+          >
+            Back to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-      <img
-        src="/Logo1.png" 
-        alt="Jiffi Fi Logo"
-        className="mx-auto h-24 w-24"
-      />
+        <img
+          src="/Logo1.png" 
+          alt="Jiffi Fi Logo"
+          className="mx-auto h-24 w-24"
+        />
         <h1 className="text-2xl font-bold">Login to Jiffi Fi</h1>
         <p className="text-muted-foreground">Enter your credentials to access your account</p>
       </div>
@@ -82,7 +170,13 @@ const LoginForm = () => {
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label htmlFor="password">Password</Label>
-            <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
+            <button
+              type="button"
+              className="text-sm text-primary hover:underline"
+              onClick={() => setIsForgotPassword(true)}
+            >
+              Forgot password?
+            </button>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
@@ -111,7 +205,6 @@ const LoginForm = () => {
             <img src="/CALL.png" alt="Phone" className="h-5 w-5" />
           </Button>
         </div>
-
 
         <div className="text-center pt-4">
           <p className="text-sm text-muted-foreground">

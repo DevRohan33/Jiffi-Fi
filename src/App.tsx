@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Profile from "./pages/Profile";
 import PaymentPage from "./pages/Payment";
+import ResetPassword from "./pages/reset-password";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPassword/>} />
               <Route path="/" element={<Index />} />
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
